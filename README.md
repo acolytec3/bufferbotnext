@@ -32,7 +32,7 @@ Copy the forwarding address that ends in `.ngrok.io`
 
 - Create a new TradingView alert on an ETHUSD chart.
 - Click on the `Notifications` tab
-- Paste the `ngrok` address into the `Webhook URL` field and make sure it has a checkmark next to it
+- Paste the `ngrok` address into the `Webhook URL` field, append `/api/trade` to the end of it, and make sure it has a checkmark next to it
 - Select `Settings`
 - Paste `{"pair":"{{ticker}}", "price": "{{close}}", "direction": "above", "accessToken": "mySuperSecretAccessToken"}` in the alert message box.  This will trigger a "long" option trade.  
   - Change direction to "below" to do "short" options.  
