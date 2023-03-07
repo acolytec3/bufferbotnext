@@ -1,38 +1,50 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Buffer Trading Bot
 
-## Getting Started
+This a proof of concept trading bot/interface for the Buffer Finance protocol that takes Trading View alerts and submits 5 minute option trades on the price of ETH provided by the alert in the direction included in the alert.
 
-First, run the development server:
+## Setting up the bot
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+- Clone this repo
+- Install dependencies using `npm i`
+- Create a `.env` in the directory root following [.env.example](./.env.example)
+- Install [ngrok](https://ngrok.com/)
+
+
+## Running the bot
+
+- Run `npm run dev` to start the bot
+- Run `path/to/ngrok http 3000`
+
+You should see something like:
+```
+Session Status                online                                            
+Account                       yourSecretNgrokUserName (Plan: Free)                            
+Version                       3.1.1                                             
+Region                        United States (us)                                
+Latency                       47ms                                              
+Web Interface                 http://127.0.0.1:4040                             
+Forwarding                    https://b0cf-71-69-227-154.ngrok.io -> http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy the forwarding address that ends in `.ngrok.io`
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Set up your Trading View Alert
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- Create a new TradingView alert on an ETHUSD chart.
+- Click on the `Notifications` tab
+- Paste the `ngrok` address into the `Webhook URL` field and make sure it has a checkmark next to it
+- Select `Settings`
+- Paste `{"pair":"{{ticker}}", "price": "{{close}}", "direction": "above", "accessToken": "mySuperSecretAccessToken"}` in the alert message box.  This will trigger a "long" option trade.  
+  - Change direction to "below" to do "short" options.  
+  - Replace the access token string with the one from your `config.json` above
+- Set your trigger condition and start the alert.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## See results
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+If all goes well, you should see a transction logged to the console indicating a trade was submitted.
 
-## Learn More
+## Notes
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- This bot assumes you have alread approved the Buffer contract to use USDC on the wallet you provide to it.  Make sure you go to [Buffer Finance](https://app.buffer.finance) and approve USDC before trying to use this bot.
+- The access token is not required but will help secure your bot from random griefers testing out their trading strategies
+- There is a hardcoded 5 second cool down period between trades.  So, if your TradingView alert gets triggered more than once per 5 seconds, every alert after the first will be ignored until the cooldown period passes
