@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import {
   MainnetAbi,
+  MainnetAbi__factory,
   TestnetAbi__factory,
 } from "../../../types/ethers-contracts";
 import { ethers } from "ethers";
@@ -8,9 +9,10 @@ type Data = {
   name: string;
 };
 
+const inDevEnvironment = process.env.DEV === 'true'
 const provider = new ethers.providers.EtherscanProvider(
   421613,
- process.env.ALCHEMYGOERLIKEY
+ inDevEnvironment ? process.env.ALCHEMYGOERLIKEY : process.env.ALCHEMYKEY
 );
 const signer = new ethers.Wallet(process.env.KEY!, provider);
 const accessToken = process.env.ACCESSTOKEN
@@ -24,7 +26,7 @@ type Order = {
 };
 
 const pairs = {
-  ETHUSD: "0xd7c4448e2Ac721e77360d86e413Ae66620034b8A",
+  ETHUSD: inDevEnvironment ? "0xd7c4448e2Ac721e77360d86e413Ae66620034b8A" : "0x89dd9ba4d290045211a6ce597a98181c7f9d899d",
   BTCUSD: "0x532321e6a2d8a54cf87e34850a7d55466b1ec197",
   ETHBTC: "0x5d6f1d376e5ea088532ae03dbe8f46177c42b814",
   LINKUSD: "0xd384131b8697f28e8505cc24e1e405962b88b21f",
@@ -67,10 +69,10 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
     return 401;
   }
 
-  const buffer = TestnetAbi__factory.connect(process.env.TESTNET_ADDRESS!, signer);
+  const buffer = inDevEnvironment ? TestnetAbi__factory.connect(process.env.TESTNET_ADDRESS!, signer) : MainnetAbi__factory.connect(process.env.MAINNETADDRESS!, signer)
   
   let contract = "";
-  console.log('the trade',trade)
+
   switch (trade.pair) {
     case "ETHUSD":
       contract = pairs.ETHUSD;
@@ -135,7 +137,7 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
       "", // Referral code -- defaults to blank
       0, // Optopi token ID -- we default to 0 but you could check in the contract
       {
-        gasLimit: ethers.BigNumber.from(12142857 + 100000),
+        gasLimit: gas.add(100000),
         maxFeePerGas: gasPrice,
         maxPriorityFeePerGas: ethers.BigNumber.from(1),
         nonce: nonce,

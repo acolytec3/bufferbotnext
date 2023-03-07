@@ -7,6 +7,7 @@ This a proof of concept trading bot/interface for the Buffer Finance protocol th
 - Clone this repo
 - Install dependencies using `npm i`
 - Create a `.env` in the directory root following [.env.example](./.env.example)
+- Set the `DEV` value to true to trade on the [Buffer testnet](./testnet.buffer.finance)
 - Install [ngrok](https://ngrok.com/)
 
 
