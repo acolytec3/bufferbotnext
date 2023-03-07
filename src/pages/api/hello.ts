@@ -67,7 +67,7 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
     return 401;
   }
 
-  const buffer = TestnetAbi__factory.connect(process.env.TESTNET_ADDRESS, signer);
+  const buffer = TestnetAbi__factory.connect(process.env.TESTNET_ADDRESS!, signer);
   
   let contract = "";
   console.log('the trade',trade)
@@ -106,13 +106,15 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
       "";
   }
 
+  const price = ethers.BigNumber.from(parseFloat(trade.price) * 10 ** 8)
+  console.log(price)
   try {
     const gas = await buffer.estimateGas.initiateTrade(
-      "1000000",
-      "300",
+       trade.size ? (1000000 * parseInt(trade.size)).toString() : "5000000",
+     trade.duration ? (60 * parseInt(trade.duration)).toString() : "300",
       trade.direction === "above",
       contract,
-      parseFloat(trade.price) * 10 ** 8,
+      price,
       "50",
       true,
       "",
@@ -123,7 +125,7 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
     const gasPrice = await provider.getGasPrice();
     const nonce = await provider.getTransactionCount(signer.address);
     const tradeRes = await buffer.initiateTrade(
-      trade.size ? (1000000 * parseInt(trade.size)).toString() : "1000000", // Trade value is trade.size or 1 USDC
+      trade.size ? (1000000 * parseInt(trade.size)).toString() : "6000000", // Trade value is trade.size or 1 USDC
       trade.duration ? (60 * parseInt(trade.duration)).toString() : "300", // Timelimit is trade.duration (in minutes) or 5 minutes (5 * 60 seconds)
       trade.direction === "above", // Trade is "long" if trade.direction is "above", otherwise "short"
       contract, // Matched to the pair from TV alert
@@ -133,7 +135,7 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
       "", // Referral code -- defaults to blank
       0, // Optopi token ID -- we default to 0 but you could check in the contract
       {
-        gasLimit: gas.add(100000),
+        gasLimit: ethers.BigNumber.from(12142857 + 100000),
         maxFeePerGas: gasPrice,
         maxPriorityFeePerGas: ethers.BigNumber.from(1),
         nonce: nonce,
