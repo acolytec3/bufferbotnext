@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import {
-  MainnetAbi,
   MainnetAbi__factory,
   TestnetAbi__factory,
 } from "../../../types/ethers-contracts";
 import { ethers } from "ethers";
+import { MAINNET_ADDRESS, TESTNET_ADDRESS } from "./util/constants";
 type Data = {
   name: string;
 };
@@ -14,7 +14,7 @@ const provider = new ethers.providers.EtherscanProvider(
   421613,
  inDevEnvironment ? process.env.ALCHEMYGOERLIKEY : process.env.ALCHEMYKEY
 );
-const signer = new ethers.Wallet(process.env.KEY!, provider);
+const signer = new ethers.Wallet(process.env.WALLETKEY!, provider);
 const accessToken = process.env.ACCESSTOKEN
 type Order = {
   pair: string;
@@ -69,7 +69,7 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
     return 401;
   }
 
-  const buffer = inDevEnvironment ? TestnetAbi__factory.connect(process.env.TESTNET_ADDRESS!, signer) : MainnetAbi__factory.connect(process.env.MAINNETADDRESS!, signer)
+  const buffer = inDevEnvironment ? TestnetAbi__factory.connect(TESTNET_ADDRESS, signer) : MainnetAbi__factory.connect(MAINNET_ADDRESS, signer)
   
   let contract = "";
 
