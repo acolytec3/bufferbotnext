@@ -44,21 +44,24 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
+  return new Promise(async (resolve) => {
   if (req.method === "POST") {
     if (
       wlIPs.findIndex((el) => el === req.headers["x-forwarded-for"]) &&
       cooledOff === true
     ) {
       const num = await makeTrade(req)
-      console.log(num)
       cooledOff = false; 
       setTimeout(() => cooledOff = true, 1) // Starts a cooldown period before the next trade can be submitted
       res.status(200);
     } else {
       res.status(400).json({ name: "Unauthorized"})
-    }
-    
+    } 
+  } else {
+    res.status(400).json({ name: "Unauthorized"})
   }
+  resolve(undefined)
+})
 }
 
 
