@@ -9,24 +9,26 @@ type Data = {
   name: string;
 };
 
-const inDevEnvironment = process.env.DEV === 'true'
+const inDevEnvironment = process.env.DEV === "true";
 const provider = new ethers.providers.EtherscanProvider(
   421613,
- inDevEnvironment ? process.env.ALCHEMYGOERLIKEY : process.env.ALCHEMYKEY
+  inDevEnvironment ? process.env.ALCHEMYGOERLIKEY : process.env.ALCHEMYKEY
 );
 const signer = new ethers.Wallet(process.env.WALLETKEY!, provider);
-const accessToken = process.env.ACCESSTOKEN
+const accessToken = process.env.TRADINGVIEWACCESSTOKEN;
 type Order = {
   pair: string;
   price: string;
   direction: string;
   accessToken?: string;
   size?: string;
-  duration?: string
+  duration?: string;
 };
 
 const pairs = {
-  ETHUSD: inDevEnvironment ? "0xd7c4448e2Ac721e77360d86e413Ae66620034b8A" : "0x89dd9ba4d290045211a6ce597a98181c7f9d899d",
+  ETHUSD: inDevEnvironment
+    ? "0xd7c4448e2Ac721e77360d86e413Ae66620034b8A"
+    : "0x89dd9ba4d290045211a6ce597a98181c7f9d899d",
   BTCUSD: "0x532321e6a2d8a54cf87e34850a7d55466b1ec197",
   ETHBTC: "0x5d6f1d376e5ea088532ae03dbe8f46177c42b814",
   LINKUSD: "0xd384131b8697f28e8505cc24e1e405962b88b21f",
@@ -45,25 +47,24 @@ export default async function handler(
   res: NextApiResponse<Data>
 ) {
   return new Promise(async (resolve) => {
-  if (req.method === "POST") {
-    if (
-      wlIPs.findIndex((el) => el === req.headers["x-forwarded-for"]) &&
-      cooledOff === true
-    ) {
-      const num = await makeTrade(req)
-      cooledOff = false; 
-      setTimeout(() => cooledOff = true, 1) // Starts a cooldown period before the next trade can be submitted
-      res.status(200);
+    if (req.method === "POST") {
+      if (
+        wlIPs.findIndex((el) => el === req.headers["x-forwarded-for"]) &&
+        cooledOff === true
+      ) {
+        const num = await makeTrade(req);
+        cooledOff = false;
+        setTimeout(() => (cooledOff = true), 1); // Starts a cooldown period before the next trade can be submitted
+        res.status(200);
+      } else {
+        res.status(400).json({ name: "Unauthorized" });
+      }
     } else {
-      res.status(400).json({ name: "Unauthorized"})
-    } 
-  } else {
-    res.status(400).json({ name: "Unauthorized"})
-  }
-  resolve(undefined)
-})
+      res.status(400).json({ name: "Unauthorized" });
+    }
+    resolve(undefined);
+  });
 }
-
 
 export const makeTrade = async (req: NextApiRequest): Promise<number> => {
   const trade = (await req.body) as Order;
@@ -72,8 +73,10 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
     return 401;
   }
 
-  const buffer = inDevEnvironment ? TestnetAbi__factory.connect(TESTNET_ADDRESS, signer) : MainnetAbi__factory.connect(MAINNET_ADDRESS, signer)
-  
+  const buffer = inDevEnvironment
+    ? TestnetAbi__factory.connect(TESTNET_ADDRESS, signer)
+    : MainnetAbi__factory.connect(MAINNET_ADDRESS, signer);
+
   let contract = "";
 
   switch (trade.pair) {
@@ -111,12 +114,34 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
       "";
   }
 
-  const price = ethers.BigNumber.from(parseFloat(trade.price) * 10 ** 8)
-  console.log(price)
+  const price = ethers.BigNumber.from(parseFloat(trade.price) * 10 ** 8);
+
   try {
+
+    let tradeSize = trade.size ? (parseInt(trade.size) * 1000000).toString() : undefined ;
+    let tradeDuration = trade.duration;
+    switch (inDevEnvironment) {
+      case true: {
+        if (!tradeSize || parseInt(tradeSize) < 5000000) {
+          tradeSize = "5000000"; // Default trade to minimum testnet amount (i.e. $5)
+        }
+        if (!tradeDuration || parseInt(tradeDuration) < 1) {
+          tradeDuration = "60"; // Default trade duration to minimum testnet trade duration (i.e. 60 seconds)
+        }
+      }
+      case false: {
+        if (!tradeSize || parseInt(tradeSize) < 1000000) {
+          tradeSize = "1000000"; // Default trade to minimum mainnet amount (i.e. $1)
+        }
+        if (!tradeDuration || parseInt(tradeDuration) < 5) {
+          tradeDuration = "60"; // Default trade duration to minimum mainnet trade duration (i.e. 300 seconds)
+        }
+      }
+    }
+
     const gas = await buffer.estimateGas.initiateTrade(
-       trade.size ? (1000000 * parseInt(trade.size)).toString() : "5000000",
-     trade.duration ? (60 * parseInt(trade.duration)).toString() : "300",
+      tradeSize,
+      tradeDuration,
       trade.direction === "above",
       contract,
       price,
@@ -126,12 +151,11 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
       0
     );
 
-    
     const gasPrice = await provider.getGasPrice();
     const nonce = await provider.getTransactionCount(signer.address);
     const tradeRes = await buffer.initiateTrade(
-      trade.size ? (1000000 * parseInt(trade.size)).toString() : "6000000", // Trade value is trade.size or 1 USDC
-      trade.duration ? (60 * parseInt(trade.duration)).toString() : "300", // Timelimit is trade.duration (in minutes) or 5 minutes (5 * 60 seconds)
+      tradeSize, // Trade value is trade.size or 1 USDC
+      tradeDuration, // Timelimit is trade.duration (in minutes) or 5 minutes (5 * 60 seconds)
       trade.direction === "above", // Trade is "long" if trade.direction is "above", otherwise "short"
       contract, // Matched to the pair from TV alert
       parseFloat(trade.price) * 10 ** 8, // Current price times 10^8 - Contract uses 8 decimal places
@@ -150,6 +174,6 @@ export const makeTrade = async (req: NextApiRequest): Promise<number> => {
   } catch (err) {
     console.log(err);
   }
-  
+
   return 200;
 };

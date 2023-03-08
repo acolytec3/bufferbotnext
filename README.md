@@ -34,17 +34,19 @@ Forwarding                    https://b0cf-71-69-227-154.ngrok.io -> http://loca
 Copy the forwarding address that ends in `.ngrok.io`
 
 ## Alternatively - deploy with Vercel (experimental)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Facolytec3%2Fbufferbotnext&env=DEV,WALLETKEY,ALCHEMYKEY,ACCESSTOKEN,ALCHEMYGOERLIKEY&envDescription=The%20two%20real%20API%20keys%20you%20need%20(and%20you%20really%20only%20need%20one)%20is%20an%20Alchemy%20API%20Key.%20%20&envLink=https%3A%2F%2Fwww.alchemy.com&project-name=my-bufferbotnext&repository-name=my-bufferbotnext)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Facolytec3%2Fbufferbotnext&env=DEV,WALLETKEY,ALCHEMYKEY,TRADINGVIEWACCESSTOKEN,ALCHEMYGOERLIKEY&envDescription=The%20two%20real%20API%20keys%20you%20need%20(and%20you%20really%20only%20need%20one)%20is%20an%20Alchemy%20API%20Key.%20%20&envLink=https%3A%2F%2Fwww.alchemy.com&project-name=my-bufferbotnext&repository-name=my-bufferbotnext)
 
-If you go this route, once you've gone through the deployment flow and populate your environmental variables, copy the deployment URL that vercel gives you.
+If you go this route, once you've gone through the deployment flow and populate your environmental variables, copy the deployment URL that Vercel gives you.
 ## Set up your Trading View Alert
 
 - Create a new TradingView alert on an ETHUSD chart.
 - Click on the `Notifications` tab
-- Paste the `ngrok` address into the `Webhook URL` field, append `/api/trade` to the end of it, and make sure it has a checkmark next to it
+- Paste the address from above (either `ngrok` or `vercel` deployment link into the `Webhook URL` field, append `/api/trade` to the end of it, and make sure it has a checkmark next to it.  Should like something like `https://ngrok.io/my-api-link/api/trade` or `https://my.verceltradingbot.app/api/trade`
 - Select `Settings`
-- Paste `{"pair":"{{ticker}}", "price": "{{close}}", "direction": "above", "accessToken": "mySuperSecretAccessToken"}` in the alert message box.  This will trigger a "long" option trade.  
-  - Change direction to "below" to do "short" options.  
+- Paste `{"pair":"{{ticker}}", "price": "{{close}}", "direction": "above", "accessToken": "mySuperSecretAccessToken", "duration": "5", "size": "1"}` in the alert message box.  This will trigger a "long" option trade with a duration of 5 minutes and a size of $1.  
+  - You can change the following options to customize your trade:
+    - Size can be any whole number (so changing to 10 will give you a $10 option) 
+    - Duration can be any whole number (so changing to 10 will give you a 10 minute option)
   - Replace the access token string with the one from your `config.json` above
 - Set your trigger condition and start the alert.
 
