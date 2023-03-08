@@ -49,3 +49,6 @@ If all goes well, you should see a transction logged to the console indicating a
 - This bot assumes you have alread approved the Buffer contract to use USDC on the wallet you provide to it.  Make sure you go to [Buffer Finance](https://app.buffer.finance) and approve USDC before trying to use this bot.
 - The access token is not required but will help secure your bot from random griefers testing out their trading strategies
 - There is a hardcoded 5 second cool down period between trades.  So, if your TradingView alert gets triggered more than once per 5 seconds, every alert after the first will be ignored until the cooldown period passes
+
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Facolytec3%2Fbufferbotnext&env=DEV,KEY,ALCHEMYKEY,ACCESSTOKEN,ALCHEMYGOERLIKEY&envDescription=The%20two%20real%20API%20keys%20you%20need%20(and%20you%20really%20only%20need%20one)%20is%20an%20Alchemy%20API%20Key.%20%20&envLink=https%3A%2F%2Fgithub.com%2Facolytec3%2Fbufferbotnext%2FREADME.md&project-name=my-bufferbotnext&repository-name=my-bufferbotnext)
